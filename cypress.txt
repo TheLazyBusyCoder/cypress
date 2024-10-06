@@ -1,0 +1,175 @@
+npm install cypress --save-dev
+npx cypress open 
+
+cypress/e2e/home.cy.js
+
+The describe() function takes two arguments. The first is a string which is a description of the tests contained within it. The second is a callback function. Since this file is going to contain tests for our home page, let's update this to say “home page.”
+
+This is our actual test.
+
+Each time you see it() within a given spec file that is a single test. It takes the exact same arguments as the describe() function: first a string and then a callback function.
+
+describe("home page", () => {
+  it("the h1 contains the correct text", () => {
+    cy.visit("https://example.cypress.io")
+  })
+})
+
+visit is a command that tells Cypress where to execute our tests. We are going to be running our application locally on localhost:3000 
+
+describe("home page", () => {
+  it("the h1 contains the correct text", () => {
+    cy.visit("http://localhost:3000")
+  })
+})
+
+
+cy.get("h1").contains("Kitchen Sinkk");
+
+Use data-* attributes to provide context to your selectors and isolate them from CSS or JS changes. 
+<button
+  id="main"
+  class="btn btn-large"
+  name="submission"
+  role="button"
+  data-cy="submit"
+>Submit
+</button>
+cy.get('[data-cy="submit"]').click()
+
+If I should always use data attributes, then when should I use cy.contains()?
+If the content of the element changed would you want the test to fail?
+    If the answer is yes: then use cy.contains()
+    If the answer is no: then use a data attribute.
+
+By adding .only() after the it we are telling Cypress to only run this specific test
+You can add .only() to multiple tests, and only those tests will run.
+describe("template spec", () => {
+  it("passes", () => {
+    cy.visit("localhost:3000")
+    cy.get("[data-test='hero-heading']").contains(
+      "Testing Next.js Applications with Cypress"
+    )
+  })
+  it.only("the features on the homepage are correct", () => {
+    cy.visit("http://localhost:3000")
+  })
+})
+
+So how then do we get just one of these <dt> elements? Specifically, we want to get the first one and make sure that the text says “4 Courses”.
+Since we are getting back an array, we can use a Cypress command called eq. This command will allow us to access a specific index within an array of elements, which is exactly what we want.
+
+
+You can also pass regular expressions into the contains method. So if you wanted to make a case insensitive comparison using regex, you could use:
+cy.get("dt").eq(0).contains(/4 courses/i)
+
+beforeEach() hook. This is a function that will get called “before each” test is run, which is exactly what we want.
+describe("home page", () => {
+  beforeEach(() => {
+    cy.visit("http://localhost:3000")
+  })
+  it("the h1 contains the correct text", () => {
+    cy.get("[data-test='hero-heading']").contains(
+      "Testing Next.js Applications with Cypress"
+    )
+  })
+  it("the features on the homepage are correct", () => {
+    cy.get("dt").eq(0).contains("4 Courses")
+    cy.get("dt").eq(1).contains("25+ Lessons")
+    cy.get("dt").eq(2).contains("Free and Open Source")
+  })
+})
+
+
+How to test forms & custom Cypress commands
+
+Custome Commands: 
+  describe("home page", () => {
+    it("the features on the homepage are correct", () => {
+      cy.visit("http://localhost:3000")
+      cy.get("dt").eq(0).contains("4 Courses")
+      cy.getByData("Some Fuck")
+    })
+  })
+
+  Put this code in this file: cypress/support/commands.ts
+    Cypress.Commands.add("getByData", (s) => {
+      return cy.get(`[data-test='${s}']`)
+    })
+
+Type text in the input fileds: 
+  describe("home page", () => {
+    it("the features on the homepage are correct", () => {
+      cy.visit("http://localhost:3000")
+      cy.get("#email-address").type("hello@gmail.com")
+    })
+  })
+
+Click on an element: 
+  describe("home page", () => {
+    it("the features on the homepage are correct", () => {
+      cy.visit("http://localhost:3000")
+      cy.get("#email-address").type("hello@gmail.com")
+      cy.get(".mt-4 > .mt-3 > .w-full").click()
+    })
+  })
+
+Use of should: 
+  describe("home page", () => {
+    it("the features on the homepage are correct", () => {
+      cy.visit("http://localhost:3000")
+      cy.get("#email-address").type("hello@gmail.com")
+      cy.get(".mt-4 > .mt-3 > .w-full").click()
+      cy.get('some-element').should('exist').contains('fuck off message')
+    })
+  })
+
+How to test multiple pages
+
+  Organizing your tests with context (grouping)
+  describe("home page", () => {
+    context("hero section", () => {
+      it("the features on the homepage are correct", () => {
+        cy.visit("http://localhost:3000")
+        cy.get("#email-address").type("hello@gmail.com")
+      })
+    })
+  })
+
+  Succeffully clicked on a button and navigated to new page and check if it matches the url. 
+  describe("home page", () => {
+    context("Course section", () => {
+      it.only("Course: Testing your first next.js application", () => {
+        cy.visit("http://localhost:3000")
+        cy.get("[data-test='course-0']").find("a").eq(3).click()
+        cy.location("pathname").should("eq", "/testing-your-first-application")
+      })
+    })
+  })
+
+How to test user journeys
+  cypress/e2e/user-journey.cy.js
+
+  describe("home page", () => {
+    context("Course section", () => {
+      it.only("Course: Testing your first next.js application", () => {
+        cy.visit("http://localhost:3000")
+        cy.get("[data-test='course-0']").find("a").eq(3).click()
+        cy.get('[data-test="next-lesson-button"]').click()
+        cy.location("pathname").should(
+          "equal",
+          "/testing-your-first-application/app-install-and-overview"
+        )
+        cy.get('[data-test="challenge-answer-0"]').click()
+        cy.get('[data-test="next-lesson-button"] > .mx-auto').click()
+        cy.location("pathname").should(
+          "equal",
+          "/testing-your-first-application/installing-cypress-and-writing-our-first-test"
+        )
+      })
+    })
+  })
+
+
+
+
